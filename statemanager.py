@@ -51,3 +51,51 @@ Implementation Notes
 
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/nnja/CircuitPython_StateManager.git"
+
+
+class State:
+
+    label = "State"
+
+    def __init__(self):
+        self.state_manager = None
+
+    def display(self):
+        raise NotImplementedError
+
+    def handle_event(self):
+        raise NotImplementedError
+
+
+class StateManager:
+
+    current_state = None
+
+    def __init__(self):
+        self.states = {}
+        self._previous_states = []
+
+    def add(self, *states):
+        for state in states:
+            state.state_manager = self
+
+        self.states.update({state.__class__: state for state in states})
+
+    def previous_state(self):
+        if self._previous_states:
+            self.current_state = self._previous_states.pop()
+            self.states[self.current_state].display()
+
+    def check_for_event(self):
+        self.states[self.current_state].handle_event()
+
+    @property
+    def state(self):
+        return self.states[self.current_state]
+
+    @state.setter
+    def state(self, state):
+        print("Changing state to", self.states[state].__class__)
+        self._previous_states.append(self.current_state)
+        self.current_state = state
+        self.states[self.current_state].display()
